@@ -28,3 +28,13 @@ Thoughts
 - logging for rollback? NoSQL db?
 - show diff content, +/- operations like Git?
 
+- case against docker: more steps for users, this project doesn't need lots of dependencies, consistent environments, scalability
+- Person A "file watch changes <--> ws client <--> ws server" Person B "<--> ws client <--> file watch changes"
+
+Objective:
+WebSocket Echo Test
+
+- Person A runs leetcode-mock start (WebSocket server)
+- Person B runs leetcode-mock join <ip> (client)
+- B sends "hello", A prints it, replies "world", B prints it
+Success = working bi-directional connection
