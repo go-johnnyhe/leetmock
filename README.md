@@ -28,7 +28,6 @@ Thoughts
 - logging for rollback? NoSQL db?
 - show diff content, +/- operations like Git?
 
-- case against docker: more steps for users, this project doesn't need lots of dependencies, consistent environments, scalability
 - Person A "file watch changes <--> ws client <--> ws server" Person B "<--> ws client <--> file watch changes"
 
 Objective:
