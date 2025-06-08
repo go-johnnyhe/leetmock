@@ -8,10 +8,10 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-func client() {
+func startClient() {
 
 	// step 1: read user input from terminal
-	conn, _, err := websocket.DefaultDialer.Dial("ws://localhost:8080/ws", nil)
+	conn, _, err := websocket.DefaultDialer.Dial("wss://6b33-63-208-141-34.ngrok-free.app/ws", nil)
 	if err != nil {
 		fmt.Println("Dial error: ", err)
 		return
@@ -23,7 +23,7 @@ func client() {
 			reader := bufio.NewReader(os.Stdin)
 			msg, _ := reader.ReadString('\n')
 			conn.WriteMessage(websocket.TextMessage, []byte(msg))
-			fmt.Println(msg)
+			// fmt.Println(msg)
 		}
 	}()
 
@@ -43,5 +43,6 @@ func client() {
 }
 
 func main() {
-	client()
+	// startClient()
+	MakeConnection()
 }
