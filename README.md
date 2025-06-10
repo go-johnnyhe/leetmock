@@ -37,3 +37,4 @@ WebSocket Echo Test
 - Person B runs leetcode-mock join <ip> (client)
 - B sends "hello", A prints it, replies "world", B prints it
 Success = working bi-directional connection
+
