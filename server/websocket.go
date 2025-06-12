@@ -47,7 +47,7 @@ func StartServer(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 		if msgType == websocket.TextMessage {
-			log.Println("Message: ", msg)
+			log.Printf("Message: %s", string(msg))
 
 			clientsMutex.Lock()
 			for client := range clients {

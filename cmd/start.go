@@ -18,6 +18,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gorilla/websocket"
 	"github.com/spf13/cobra"
 )
 
@@ -56,6 +57,7 @@ Perfect for mock interviews, pair programming, and collaborative debugging.`,
 		fileName := args[0]
 		fmt.Printf("Starting the mock session with %s\n", fileName)
 
+		// Create a context to link with a command line process so that when you stop, we know where to exit
 		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 		defer stop()
 		// start server in go routine
@@ -88,6 +90,41 @@ Perfect for mock interviews, pair programming, and collaborative debugging.`,
 		fmt.Printf("   leetmock join %s\n\n", tunnelURL)
 		fmt.Println("🔥 Session active - press Ctrl+C to stop")
 
+		// let the starter user connect as a client too
+		go func() {
+			time.Sleep(500 * time.Millisecond)
+			conn, _, err := websocket.DefaultDialer.Dial("ws://localhost:8080/ws",nil)
+			if err != nil {
+				fmt.Println("Error connecting to websocket: ", err)
+				return
+			}
+			defer conn.Close()
+
+			go func() {
+				for {
+					_, msg, err := conn.ReadMessage()
+					if err != nil {
+						fmt.Println("Error reading message: ", err)
+						return
+					}
+					fmt.Printf("Partner: %s\n", msg)
+				}
+			}()
+
+			go func() {
+				for {
+					fmt.Println("Please enter a message:")
+					reader := bufio.NewReader(os.Stdin)
+					input, _ := reader.ReadString('\n')
+					msg := strings.TrimSpace(input)
+					err := conn.WriteMessage(websocket.TextMessage, []byte(msg))
+					if err != nil {
+						fmt.Println("Error writing message: ", err)
+					}
+				}
+			}()
+			select{}
+		}()
 
 		<-ctx.Done()
 		srv.Shutdown(context.Background())

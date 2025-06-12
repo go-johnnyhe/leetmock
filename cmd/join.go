@@ -1,0 +1,87 @@
+/*
+Copyright © 2025 NAME HERE <EMAIL ADDRESS>
+*/
+package cmd
+
+import (
+	"bufio"
+	"context"
+	"fmt"
+	"os"
+	"os/signal"
+	"strings"
+	"syscall"
+
+	"github.com/gorilla/websocket"
+	"github.com/spf13/cobra"
+)
+
+// joinCmd represents the join command
+var joinCmd = &cobra.Command{
+	Use:   "join <session-url>",
+	Short: "Join an existing collaborative coding session",
+	Long: `Join a collaborative coding session by connecting to the provided URL.
+
+This will:
+- Connect to the session via WebSocket
+- Sync shared files to ./shared/ directory
+- Enable real-time file synchronization
+
+Example:
+  leetmock join https://abc123.trycloudflare.com
+
+The session URL comes from whoever ran 'leetmock start'.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println("join called")
+		if len(args) != 1 {
+			fmt.Println("Error: this takes exactly one url")
+			cmd.Usage()
+			return
+		}
+		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+		defer stop()
+		sessionUrl := args[0]
+		wsURL := strings.Replace(sessionUrl, "https://", "wss://", 1)
+		if !strings.HasSuffix(wsURL, "/ws") {
+			wsURL = strings.TrimSuffix(wsURL, "/") + "/ws"
+		}
+		fmt.Println("Starting your mock interview session ...")
+		conn, _, err := websocket.DefaultDialer.Dial(wsURL, nil)
+		if err != nil {
+			fmt.Println("Error making connection", err)
+			return
+		}
+		defer conn.Close()
+		// Read channel
+		go func() {
+			for {
+				_, msg, err := conn.ReadMessage()
+				if err != nil {
+					fmt.Println("Error reading msg", err)
+					return
+				}
+				fmt.Printf("Received: %s\n", msg)
+			}
+		}()
+		// Write channel
+		go func() {
+			for {
+				fmt.Println("Please type a message in:")
+				reader := bufio.NewReader(os.Stdin)
+				input, _ := reader.ReadString('\n')
+				msg := strings.TrimSpace(input)
+				if err := conn.WriteMessage(websocket.TextMessage, []byte(msg)); err != nil {
+					fmt.Println("Error writing message", err)
+				}
+			}
+		}()
+
+		<-ctx.Done()
+		fmt.Println("")
+		fmt.Println("Goodbye!")
+	},
+}
+
+func init() {
+	rootCmd.AddCommand(joinCmd)
+}
