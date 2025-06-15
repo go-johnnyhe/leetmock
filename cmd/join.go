@@ -4,17 +4,21 @@ Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"bufio"
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 
+	"github.com/fsnotify/fsnotify"
 	"github.com/gorilla/websocket"
 	"github.com/spf13/cobra"
 )
+
+var timer *time.Timer
 
 // joinCmd represents the join command
 var joinCmd = &cobra.Command{
@@ -63,23 +67,85 @@ The session URL comes from whoever ran 'leetmock start'.`,
 				fmt.Printf("Received: %s\n", msg)
 			}
 		}()
+
+		go monitorFile(conn)
 		// Write channel
-		go func() {
-			for {
-				fmt.Println("Please type a message in:")
-				reader := bufio.NewReader(os.Stdin)
-				input, _ := reader.ReadString('\n')
-				msg := strings.TrimSpace(input)
-				if err := conn.WriteMessage(websocket.TextMessage, []byte(msg)); err != nil {
-					fmt.Println("Error writing message", err)
-				}
-			}
-		}()
+		// go func() {
+		// 	for {
+		// 		fmt.Println("Please type a message in:")
+		// 		reader := bufio.NewReader(os.Stdin)
+		// 		input, _ := reader.ReadString('\n')
+		// 		msg := strings.TrimSpace(input)
+		// 		if err := conn.WriteMessage(websocket.TextMessage, []byte(msg)); err != nil {
+		// 			fmt.Println("Error writing message", err)
+		// 		}
+		// 	}
+		// }()
 
 		<-ctx.Done()
 		fmt.Println("")
 		fmt.Println("Goodbye!")
 	},
+}
+
+
+func monitorFile(conn *websocket.Conn) {
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		log.Println("error creating a watcher: ", err)
+		return
+	}
+
+	go func() {
+		defer watcher.Close()
+		for {
+			select {
+			case event, ok := <- watcher.Events:
+				if !ok {
+					return
+				}
+				if timer != nil {
+					timer.Stop()
+				}
+				if event.Has(fsnotify.Write) {
+					filepath := event.Name
+					if strings.HasSuffix(filepath, ".tmp") || strings.HasSuffix(filepath, ".swp") {
+						fmt.Println("ignoring temp file: ", filepath)
+						continue
+					}
+					timer = time.AfterFunc(500*time.Millisecond, func() {
+						sendFile(filepath, conn)
+					})
+				}
+			case err, ok := <- watcher.Errors:
+				if !ok {
+					return
+				}
+				log.Println("error with the watcher: ", err)
+			}
+		}
+	}()
+
+	watchPath := "./"
+	if err := watcher.Add(watchPath); err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("Watching for changes under the directory: ", watchPath)
+}
+
+func sendFile(filePath string, conn *websocket.Conn) {
+	content, err := os.ReadFile(filePath)
+	if err != nil {
+		log.Println("error reading the file: ", err)
+		return
+	}
+	fmt.Println(string(content))
+
+	if err := conn.WriteMessage(websocket.TextMessage, content); err != nil {
+		log.Println("error writing the file: ", err)
+	}
+	fmt.Println("Sent at: ", time.Now())
 }
 
 func init() {
