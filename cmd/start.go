@@ -111,18 +111,19 @@ Perfect for mock interviews, pair programming, and collaborative debugging.`,
 				}
 			}()
 
-			go func() {
-				for {
-					fmt.Println("Please enter a message:")
-					reader := bufio.NewReader(os.Stdin)
-					input, _ := reader.ReadString('\n')
-					msg := strings.TrimSpace(input)
-					err := conn.WriteMessage(websocket.TextMessage, []byte(msg))
-					if err != nil {
-						fmt.Println("Error writing message: ", err)
-					}
-				}
-			}()
+			go monitorFile(conn)
+			// go func() {
+			// 	for {
+			// 		fmt.Println("Please enter a message:")
+			// 		reader := bufio.NewReader(os.Stdin)
+			// 		input, _ := reader.ReadString('\n')
+			// 		msg := strings.TrimSpace(input)
+			// 		err := conn.WriteMessage(websocket.TextMessage, []byte(msg))
+			// 		if err != nil {
+			// 			fmt.Println("Error writing message: ", err)
+			// 		}
+			// 	}
+			// }()
 			select{}
 		}()
 
