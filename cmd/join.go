@@ -5,6 +5,8 @@ package cmd
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"log"
 	"os"
@@ -23,6 +25,12 @@ import (
 var timer *time.Timer
 var isWritingReceivedFile = false
 var writeMutex sync.Mutex
+var lastHash sync.Map
+
+func fileHash(b []byte) string {
+	h := sha256.Sum256(b)
+	return hex.EncodeToString(h[:])
+}
 
 // joinCmd represents the join command
 var joinCmd = &cobra.Command{
@@ -72,33 +80,34 @@ The session URL comes from whoever ran 'leetmock start'.`,
 }
 
 func readFile(conn *websocket.Conn) {
-			for {
-			_, msg, err := conn.ReadMessage()
-			if err != nil {
-				log.Println("Error reading msg", err)
-				return
-			}
-			parts := strings.SplitN(string(msg), "|", 2)
-			if len(parts) != 2 {
-				log.Printf("Received invalid message format: %s\n", string(msg))
-				continue
-			}
-
-			filename:= parts[0]
-			content := parts[1]
-
-			writeMutex.Lock()
-			isWritingReceivedFile = true
-			if err = os.WriteFile(filename, []byte(content), 0644); err != nil {
-				log.Printf("error writing this file: %s: %v\n", filename, err)
-			} else {
-				log.Printf("Received update to %s (%d bytes)\n", filename, len(content))
-			}
-
-			time.Sleep(100 * time.Millisecond)
-			isWritingReceivedFile = false
-			writeMutex.Unlock()
+	for {
+		_, msg, err := conn.ReadMessage()
+		if err != nil {
+			log.Println("Error reading msg", err)
+			return
 		}
+		parts := strings.SplitN(string(msg), "|", 2)
+		if len(parts) != 2 {
+			log.Printf("Received invalid message format: %s\n", string(msg))
+			continue
+		}
+
+		filename:= parts[0]
+		content := parts[1]
+
+		writeMutex.Lock()
+		isWritingReceivedFile = true
+		if err = os.WriteFile(filename, []byte(content), 0644); err != nil {
+			log.Printf("error writing this file: %s: %v\n", filename, err)
+		} else {
+			log.Printf("Received update to %s (%d bytes)\n", filename, len(content))
+		}
+		lastHash.Store(filename, fileHash([]byte(content)))
+
+		time.Sleep(100 * time.Millisecond)
+		isWritingReceivedFile = false
+		writeMutex.Unlock()
+	}
 }
 
 
@@ -114,22 +123,31 @@ func monitorFile(conn *websocket.Conn) {
 		for {
 			select {
 			case event, ok := <- watcher.Events:
+				log.Printf("FS-Event  %s  %s\n", event.Op.String(), event.Name)
 				if !ok {
 					return
 				}
 				if timer != nil {
 					timer.Stop()
 				}
-				if event.Has(fsnotify.Write) {
-					filepath := event.Name
-					if strings.HasSuffix(filepath, ".tmp") || strings.HasSuffix(filepath, ".swp") {
-						fmt.Println("ignoring temp file: ", filepath)
-						continue
-					}
-					timer = time.AfterFunc(500*time.Millisecond, func() {
-						sendFile(filepath, conn)
-					})
+				if event.Op&(fsnotify.Write|fsnotify.Create|fsnotify.Rename|fsnotify.Chmod) != 0 {
+				filePath := event.Name
+				base := filepath.Base(filePath)
+
+				// Skip Vim swap/undo files only
+				if strings.HasSuffix(base, ".swp") || strings.HasSuffix(base, ".tmp") {
+					return
 				}
+
+				// If it's a backup (ends with ~), sync the *real* file instead
+				if strings.HasSuffix(base, "~") {
+					filePath = strings.TrimSuffix(filePath, "~")
+				}
+
+				timer = time.AfterFunc(500*time.Millisecond, func() {
+					sendFile(filePath, conn)
+				})
+			}
 			case err, ok := <- watcher.Errors:
 				if !ok {
 					return
@@ -149,6 +167,7 @@ func monitorFile(conn *websocket.Conn) {
 
 func sendFile(filePath string, conn *websocket.Conn) {
 	if isWritingReceivedFile {
+		fmt.Printf("Skipping send - currently writing received file\n")
 		return
 	}
 	content, err := os.ReadFile(filePath)
@@ -156,8 +175,15 @@ func sendFile(filePath string, conn *websocket.Conn) {
 		log.Println("error reading the file: ", err)
 		return
 	}
-	fileName := filepath.Base(filePath)
-	message := fmt.Sprintf("%s|%s", fileName, string(content))
+
+
+	key := filepath.Base(filePath)
+	newHash := fileHash(content)
+	if prev, ok := lastHash.Load(key); ok && prev.(string) == newHash {
+		return
+	}
+	lastHash.Store(key, newHash)
+	message := fmt.Sprintf("%s|%s", key, content)
 
 	if err := conn.WriteMessage(websocket.TextMessage, []byte(message)); err != nil {
 		log.Println("error writing the file: ", err)
