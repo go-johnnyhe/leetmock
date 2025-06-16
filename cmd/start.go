@@ -22,6 +22,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+
 // startCmd represents the start command
 var startCmd = &cobra.Command{
 	Use:   "start <file>",
@@ -100,18 +101,9 @@ Perfect for mock interviews, pair programming, and collaborative debugging.`,
 			}
 			defer conn.Close()
 
-			go func() {
-				for {
-					_, msg, err := conn.ReadMessage()
-					if err != nil {
-						fmt.Println("Error reading message: ", err)
-						return
-					}
-					fmt.Printf("Partner: %s\n", msg)
-				}
-			}()
+			go readFile(conn)
 
-			go monitorFile(conn)
+			// go monitorFile(conn)
 			// go func() {
 			// 	for {
 			// 		fmt.Println("Please enter a message:")

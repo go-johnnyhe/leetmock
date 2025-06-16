@@ -9,7 +9,9 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
@@ -19,6 +21,8 @@ import (
 )
 
 var timer *time.Timer
+var isWritingReceivedFile = false
+var writeMutex sync.Mutex
 
 // joinCmd represents the join command
 var joinCmd = &cobra.Command{
@@ -57,35 +61,44 @@ The session URL comes from whoever ran 'leetmock start'.`,
 		}
 		defer conn.Close()
 		// Read channel
-		go func() {
-			for {
-				_, msg, err := conn.ReadMessage()
-				if err != nil {
-					fmt.Println("Error reading msg", err)
-					return
-				}
-				fmt.Printf("Received: %s\n", msg)
-			}
-		}()
+		go readFile(conn)
 
 		go monitorFile(conn)
-		// Write channel
-		// go func() {
-		// 	for {
-		// 		fmt.Println("Please type a message in:")
-		// 		reader := bufio.NewReader(os.Stdin)
-		// 		input, _ := reader.ReadString('\n')
-		// 		msg := strings.TrimSpace(input)
-		// 		if err := conn.WriteMessage(websocket.TextMessage, []byte(msg)); err != nil {
-		// 			fmt.Println("Error writing message", err)
-		// 		}
-		// 	}
-		// }()
 
 		<-ctx.Done()
 		fmt.Println("")
 		fmt.Println("Goodbye!")
 	},
+}
+
+func readFile(conn *websocket.Conn) {
+			for {
+			_, msg, err := conn.ReadMessage()
+			if err != nil {
+				log.Println("Error reading msg", err)
+				return
+			}
+			parts := strings.SplitN(string(msg), "|", 2)
+			if len(parts) != 2 {
+				log.Printf("Received invalid message format: %s\n", string(msg))
+				continue
+			}
+
+			filename:= parts[0]
+			content := parts[1]
+
+			writeMutex.Lock()
+			isWritingReceivedFile = true
+			if err = os.WriteFile(filename, []byte(content), 0644); err != nil {
+				log.Printf("error writing this file: %s: %v\n", filename, err)
+			} else {
+				log.Printf("Received update to %s (%d bytes)\n", filename, len(content))
+			}
+
+			time.Sleep(100 * time.Millisecond)
+			isWritingReceivedFile = false
+			writeMutex.Unlock()
+		}
 }
 
 
@@ -135,17 +148,21 @@ func monitorFile(conn *websocket.Conn) {
 }
 
 func sendFile(filePath string, conn *websocket.Conn) {
+	if isWritingReceivedFile {
+		return
+	}
 	content, err := os.ReadFile(filePath)
 	if err != nil {
 		log.Println("error reading the file: ", err)
 		return
 	}
-	fmt.Println(string(content))
+	fileName := filepath.Base(filePath)
+	message := fmt.Sprintf("%s|%s", fileName, string(content))
 
-	if err := conn.WriteMessage(websocket.TextMessage, content); err != nil {
+	if err := conn.WriteMessage(websocket.TextMessage, []byte(message)); err != nil {
 		log.Println("error writing the file: ", err)
 	}
-	fmt.Println("Sent at: ", time.Now())
+	fmt.Printf("Sent %s at: %s\n", filePath, time.Now().Format("15:04:05"))
 }
 
 func init() {
