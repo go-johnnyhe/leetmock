@@ -56,6 +56,20 @@ Perfect for mock interviews, pair programming, and collaborative debugging.`,
 		}
 
 		fileName := args[0]
+
+		if _, err := os.Stat(fileName); os.IsNotExist(err) {
+			if f, err := os.Create(fileName); err != nil {
+				fmt.Printf("failed to create %s: %v\n", fileName, err)
+				return
+			} else {
+				f.Close()
+				fmt.Printf("Created %s (empty file)\n", fileName)
+			}
+		} else if err != nil {
+			fmt.Printf("error checking %s: %v\n", fileName, err)
+			return
+		}
+
 		fmt.Printf("Starting the mock session with %s\n", fileName)
 
 		// Create a context to link with a command line process so that when you stop, we know where to exit
@@ -100,6 +114,8 @@ Perfect for mock interviews, pair programming, and collaborative debugging.`,
 				return
 			}
 			defer conn.Close()
+
+			sendFile(fileName, conn)
 
 			go readFile(conn)
 			go monitorFile(conn)
