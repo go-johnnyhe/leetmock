@@ -88,7 +88,11 @@ func (c *Client) readLoop() {
 			continue
 		}
 
-		filename := parts[0]
+		filename := filepath.Base(parts[0])
+		if strings.Contains(filename, "..") || strings.HasPrefix(filename, "/") {
+			log.Printf("invalid name: %s\n", filename)
+			continue
+		}
 		content := parts[1]
 
 		c.writeMutex.Lock()
