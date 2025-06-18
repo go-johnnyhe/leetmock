@@ -99,7 +99,7 @@ Perfect for mock interviews, pair programming, and collaborative debugging.`,
 		fmt.Println("🔥 Session active - press Ctrl+C to stop")
 
 		// let the starter user connect as a client too
-		go func() {
+		go func(ctx context.Context) {
 			time.Sleep(500 * time.Millisecond)
 			conn, _, err := websocket.DefaultDialer.Dial("ws://localhost:8080/ws",nil)
 			if err != nil {
@@ -111,9 +111,8 @@ Perfect for mock interviews, pair programming, and collaborative debugging.`,
 			c := client.NewClient(conn)
 			c.SendFile(fileName)
 			c.Start()
-
-			select{}
-		}()
+			<-ctx.Done()
+		}(ctx)
 
 		<-ctx.Done()
 		srv.Shutdown(context.Background())

@@ -89,7 +89,8 @@ func (c *Client) readLoop() {
 		}
 
 		filename := filepath.Base(parts[0])
-		if strings.Contains(filename, "..") || strings.HasPrefix(filename, "/") {
+		cleanPath := filepath.Clean(filename)
+		if cleanPath != filename || strings.Contains(filename, "..") || strings.HasPrefix(filename, "/") {
 			log.Printf("invalid name: %s\n", filename)
 			continue
 		}
