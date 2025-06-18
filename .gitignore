@@ -1,1 +1,3 @@
 cloudflared
+*.py
+*.pyc

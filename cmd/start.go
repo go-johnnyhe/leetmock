@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+	"leetcode/internal/client"
 	"leetcode/internal/tunnel"
 	"github.com/gorilla/websocket"
 	"github.com/spf13/cobra"
@@ -107,10 +108,9 @@ Perfect for mock interviews, pair programming, and collaborative debugging.`,
 			}
 			defer conn.Close()
 
-			sendFile(fileName, conn)
-
-			go readFile(conn)
-			go monitorFile(conn)
+			c := client.NewClient(conn)
+			c.SendFile(fileName)
+			c.Start()
 
 			select{}
 		}()
