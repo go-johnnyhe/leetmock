@@ -78,7 +78,9 @@ func (c *Client) readLoop() {
 	for {
 		_, msg, err := c.conn.ReadMessage()
 		if err != nil {
-			log.Println("error reading msg: ", err)
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+				log.Printf("Connection lost: %v", err)
+			}
 			return
 		}
 
@@ -88,6 +90,7 @@ func (c *Client) readLoop() {
 			continue
 		}
 
+		// check if file path is clean
 		filename := filepath.Base(parts[0])
 		cleanPath := filepath.Clean(filename)
 		if cleanPath != filename || strings.Contains(filename, "..") || strings.HasPrefix(filename, "/") {
@@ -98,6 +101,7 @@ func (c *Client) readLoop() {
 
 		c.writeMutex.Lock()
 		c.isWritingReceivedFile = true
+		c.writeMutex.Unlock()
 
 		if err = os.WriteFile(filename, []byte(content), 0644); err != nil {
 			log.Printf("error writing this file: %s: %v\n", filename, err)
@@ -106,9 +110,13 @@ func (c *Client) readLoop() {
 		}
 
 		c.lastHash.Store(filename, fileHash([]byte(content)))
-		time.Sleep(100*time.Millisecond)
-		c.isWritingReceivedFile = false
-		c.writeMutex.Unlock()
+
+		go func() {
+			time.Sleep(600*time.Millisecond)
+			c.writeMutex.Lock()
+			c.isWritingReceivedFile = false
+			c.writeMutex.Unlock()
+		}()
 	}
 }
 
