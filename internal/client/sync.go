@@ -49,7 +49,14 @@ func (c *Client) SendFile(filePath string) {
 		log.Println("skipping send - currently writing a received file")
 		return
 	}
-
+	fileInfo, err := os.Stat(filePath)
+	if err != nil {
+		return
+	}
+	if fileInfo.size() > 10 * 1024 * 1024 {
+		log.Printf("File %s too large (%d bytes)", filePath, fileInfo.Size())
+		return
+	}
 	content, err := os.ReadFile(filePath)
 	if err != nil {
 		log.Println("error reading the file: ", err)

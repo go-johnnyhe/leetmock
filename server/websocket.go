@@ -5,6 +5,7 @@ import (
 	"sync"
 	"fmt"
 	"log"
+	"time"
 	"github.com/gorilla/websocket"
 )
 
@@ -24,6 +25,23 @@ func StartServer(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Error upgrading to websocket connection: ", err)
 		return
 	}
+
+	conn.SetReadDeadline(time.Now().Add(60*time.Second))
+	conn.SetPongHandler(func(string) error {
+		conn.SetReadDeadline(time.Now().Add(60*time.Second))
+		return nil
+	})
+
+	ticker := time.NewTicker(30 * time.Second)
+	defer ticker.Stop()
+
+	go func() {
+		for range ticker.C {
+			if err := conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+				return
+			}
+		}
+	}()
 
 	log.Println("Connected to websocket!")
 
