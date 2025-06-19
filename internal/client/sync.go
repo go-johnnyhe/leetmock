@@ -138,7 +138,6 @@ func (c *Client) monitorFiles(ctx context.Context) {
 		log.Println("failed to create a watcher: ", err)
 		return
 	}
-	// defer watcher.Close()
 
 	go func() {
 		<- ctx.Done()

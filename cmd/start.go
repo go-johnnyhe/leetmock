@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 	"leetcode/internal/client"
@@ -74,6 +75,12 @@ Perfect for mock interviews, pair programming, and collaborative debugging.`,
 		go func() {
 			fmt.Println("Websocket server started on :8080")
 			if err := srv.ListenAndServe(); err != http.ErrServerClosed {
+				if strings.Contains(err.Error(), "address already in use") {
+					fmt.Println("Port 8080 is already in use, please close other applications using this port.")
+					fmt.Println("\nTo find what's using port 8080:")
+					fmt.Println("  Linux/Mac: lsof -i :8080")
+					fmt.Println("  Windows: netstat -ano | findstr :8080")
+				}
 				fmt.Printf("Server failed to start: %v\n", err)
 				os.Exit(1)
 			}
@@ -90,10 +97,8 @@ Perfect for mock interviews, pair programming, and collaborative debugging.`,
 			return
 		}
 
-		fmt.Printf("\n🎉 Session ready!\n")
-		fmt.Printf("📡 Session URL: %s\n", tunnelURL)
+		fmt.Printf("\n🎉 Leetmock Session ready!\n")
 		fmt.Printf("📁 Sharing: %s\n", fileName)
-		fmt.Printf("⚡ Live sync enabled!\n\n")
 		fmt.Printf("💡 Your partner should run:\n")
 		fmt.Printf("   leetmock join %s\n\n", tunnelURL)
 		fmt.Println("🔥 Session active - press Ctrl+C to stop")
