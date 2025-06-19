@@ -53,7 +53,7 @@ func (c *Client) SendFile(filePath string) {
 	if err != nil {
 		return
 	}
-	if fileInfo.size() > 10 * 1024 * 1024 {
+	if fileInfo.Size() > 10 * 1024 * 1024 {
 		log.Printf("File %s too large (%d bytes)", filePath, fileInfo.Size())
 		return
 	}
