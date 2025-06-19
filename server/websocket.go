@@ -6,10 +6,11 @@ import (
 	"fmt"
 	"log"
 	"time"
+	"leetcode/internal/wsutil"
 	"github.com/gorilla/websocket"
 )
 
-var clients = make(map[*peer]bool)
+var clients = make(map[*wsutil.Peer]bool)
 var clientsMutex = &sync.Mutex{}
 var upgrader = websocket.Upgrader {
 	ReadBufferSize: 1024,
@@ -35,10 +36,10 @@ func StartServer(w http.ResponseWriter, r *http.Request) {
 	ticker := time.NewTicker(30 * time.Second)
 	defer ticker.Stop()
 	
-	p := &peer{ws: conn}
+	p := wsutil.NewPeer(conn)
 	go func() {
 		for range ticker.C {
-			if err := p.write(websocket.PingMessage, nil); err != nil {
+			if err := p.Write(websocket.PingMessage, nil); err != nil {
 				return
 			}
 		}
@@ -71,7 +72,7 @@ func StartServer(w http.ResponseWriter, r *http.Request) {
 			clientsMutex.Lock()
 			for client := range clients {
 				if client != p {
-					err := client.write(msgType, msg)
+					err := client.Write(msgType, msg)
 					if err != nil {
 						fmt.Println("Error writing message to other clients: ", err)
 					}

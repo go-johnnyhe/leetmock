@@ -11,30 +11,32 @@ import (
     "path/filepath"
     "strings"
     "sync"
+	"sync/atomic"
     "time"
     
+	"leetcode/internal/wsutil"
+
     "github.com/fsnotify/fsnotify"
     "github.com/gorilla/websocket"
 )
 
 type Client struct {
-	conn *websocket.Conn
+	conn *wsutil.Peer
 	timer *time.Timer
 	timerMutex sync.Mutex
-	isWritingReceivedFile bool
-	writeMutex sync.Mutex
+	isWritingReceivedFile atomic.Bool
 	lastHash sync.Map
 }
 
 func NewClient(conn *websocket.Conn) *Client {
 	return &Client {
-		conn: conn,
+		conn: wsutil.NewPeer(conn),
 	}
 }
 
 func (c *Client) Start(ctx context.Context) {
 	go c.readLoop()
-	go c.monitorFiles()
+	go c.monitorFiles(ctx)
 }
 
 func fileHash(b []byte) string {
@@ -43,11 +45,8 @@ func fileHash(b []byte) string {
 }
 
 func (c *Client) SendFile(filePath string) {
-	c.writeMutex.Lock()
-	isWriting := c.isWritingReceivedFile
-	c.writeMutex.Unlock()
-
-	if isWriting {
+	
+	if c.isWritingReceivedFile.Load() {
 		log.Println("skipping send - currently writing a received file")
 		return
 	}
@@ -69,6 +68,7 @@ func (c *Client) SendFile(filePath string) {
 	newHash := fileHash(content)
 
 	if prevContent, ok := c.lastHash.Load(key); ok && prevContent.(string) == newHash {
+		log.Printf("Debug skip %s - hash unchanged", key)
 		return
 	}
 
@@ -76,7 +76,7 @@ func (c *Client) SendFile(filePath string) {
 	encodedContent := base64.StdEncoding.EncodeToString(content)
 	message := fmt.Sprintf("%s|%s", key, encodedContent)
 
-	if err := c.conn.WriteMessage(websocket.TextMessage, []byte(message)); err != nil {
+	if err := c.conn.Write(websocket.TextMessage, []byte(message)); err != nil {
 		log.Println("error writing the file: ", err)
 		return
 	}
@@ -117,35 +117,35 @@ func (c *Client) readLoop() {
 			continue
 		}
 
-		c.writeMutex.Lock()
-		c.isWritingReceivedFile = true
-		c.writeMutex.Unlock()
+
+		c.isWritingReceivedFile.Store(true)
 
 		func() {
-			defer func() {
-				c.writeMutex.Lock()
-				c.isWritingReceivedFile = false
-				c.writeMutex.Unlock()
-			}()
-			if err = os.WriteFile(filename, decodedContent, 0644); err != nil {
-				log.Printf("error writing this file: %s: %v\n", filename, err)
-			} else{
-				log.Printf("received updates to %s\n", filename)
-			}
+			defer c.isWritingReceivedFile.Store(false)
+				if err = os.WriteFile(filename, decodedContent, 0644); err != nil {
+					log.Printf("error writing this file: %s: %v\n", filename, err)
+				} else{
+					log.Printf("received updates to %s\n", filename)
+				}
 		}()
 		c.lastHash.Store(filename, fileHash(decodedContent))
 	}
 }
 
-func (c *Client) monitorFiles() {
+func (c *Client) monitorFiles(ctx context.Context) {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		log.Println("failed to create a watcher: ", err)
 		return
 	}
-	defer watcher.Close()
+	// defer watcher.Close()
 
-	go c.processFileEvents(watcher)
+	go func() {
+		<- ctx.Done()
+		watcher.Close()
+	}()
+
+	go c.processFileEvents(ctx, watcher)
 	
 	watchPath := "./"
 	if err := watcher.Add(watchPath); err != nil {
@@ -158,14 +158,15 @@ func (c *Client) monitorFiles() {
 
 }
 
-func (c *Client) processFileEvents(watcher *fsnotify.Watcher) {
+func (c *Client) processFileEvents(ctx context.Context,watcher *fsnotify.Watcher) {
 	for {
 		select {
+		case <- ctx.Done():
+			return
 		case event, ok := <- watcher.Events:
 			if !ok {
 				return
 			}
-			log.Printf("FS-Event %s %s\n", event.Op.String(), event.Name)
 
 			if event.Op&(fsnotify.Write|fsnotify.Create|fsnotify.Rename|fsnotify.Chmod) != 0 {
 				c.handleFileEvent(event)
@@ -183,9 +184,19 @@ func (c *Client) handleFileEvent(event fsnotify.Event) {
 	filePath := event.Name
 	base := filepath.Base(filePath)
 
+
 	// skip vim swap/undo files
-	if strings.HasSuffix(base, ".swp") || strings.HasSuffix(base, ".tmp") {
+	if strings.HasSuffix(base, ".swp") {
 		return
+	}
+
+	if strings.HasSuffix(base, ".tmp") {
+		trimmed := strings.TrimSuffix(filePath, ".tmp")
+		if _, err := os.Stat(trimmed); err == nil {
+			filePath = trimmed
+		} else {
+			return
+		}
 	}
 
 	if strings.HasSuffix(base, "~") {
