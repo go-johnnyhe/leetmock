@@ -9,7 +9,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-var clients = make(map[*websocket.Conn]bool)
+var clients = make(map[*peer]bool)
 var clientsMutex = &sync.Mutex{}
 var upgrader = websocket.Upgrader {
 	ReadBufferSize: 1024,
@@ -34,10 +34,11 @@ func StartServer(w http.ResponseWriter, r *http.Request) {
 
 	ticker := time.NewTicker(30 * time.Second)
 	defer ticker.Stop()
-
+	
+	p := &peer{ws: conn}
 	go func() {
 		for range ticker.C {
-			if err := conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+			if err := p.write(websocket.PingMessage, nil); err != nil {
 				return
 			}
 		}
@@ -46,13 +47,13 @@ func StartServer(w http.ResponseWriter, r *http.Request) {
 	log.Println("Connected to websocket!")
 
 	clientsMutex.Lock()
-	clients[conn] = true
+	clients[p] = true
 	clientsMutex.Unlock()
 
 	defer func() {
 		conn.Close()
 		clientsMutex.Lock()
-		delete(clients, conn)
+		delete(clients, p)
 		clientsMutex.Unlock()
 		log.Printf("Client disconnected. Total clients now: %d", len(clients))
 	}()
@@ -69,8 +70,8 @@ func StartServer(w http.ResponseWriter, r *http.Request) {
 
 			clientsMutex.Lock()
 			for client := range clients {
-				if client != conn {
-					err := client.WriteMessage(msgType, msg)
+				if client != p {
+					err := client.write(msgType, msg)
 					if err != nil {
 						fmt.Println("Error writing message to other clients: ", err)
 					}

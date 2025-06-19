@@ -1,7 +1,9 @@
 package client
 
 import (
+	"context"
     "crypto/sha256"
+	"encoding/base64"
     "encoding/hex"
     "fmt"
     "log"
@@ -30,7 +32,7 @@ func NewClient(conn *websocket.Conn) *Client {
 	}
 }
 
-func (c *Client) Start() {
+func (c *Client) Start(ctx context.Context) {
 	go c.readLoop()
 	go c.monitorFiles()
 }
@@ -71,7 +73,8 @@ func (c *Client) SendFile(filePath string) {
 	}
 
 	c.lastHash.Store(key, newHash)
-	message := fmt.Sprintf("%s|%s", key, content)
+	encodedContent := base64.StdEncoding.EncodeToString(content)
+	message := fmt.Sprintf("%s|%s", key, encodedContent)
 
 	if err := c.conn.WriteMessage(websocket.TextMessage, []byte(message)); err != nil {
 		log.Println("error writing the file: ", err)
@@ -90,6 +93,10 @@ func (c *Client) readLoop() {
 			}
 			return
 		}
+		if len(msg) > 10 * 1024 * 1024 {
+			log.Printf("message too large: %d bytes", len(msg))
+			continue
+		}
 
 		parts := strings.SplitN(string(msg), "|", 2)
 		if len(parts) != 2 {
@@ -104,26 +111,29 @@ func (c *Client) readLoop() {
 			log.Printf("invalid name: %s\n", filename)
 			continue
 		}
-		content := parts[1]
+		decodedContent, err := base64.StdEncoding.DecodeString(parts[1])
+		if err != nil {
+			log.Printf("error decoding content for %s: %v\n", filename, err)
+			continue
+		}
 
 		c.writeMutex.Lock()
 		c.isWritingReceivedFile = true
 		c.writeMutex.Unlock()
 
-		if err = os.WriteFile(filename, []byte(content), 0644); err != nil {
-			log.Printf("error writing this file: %s: %v\n", filename, err)
-		} else{
-			log.Printf("received updates to %s\n", filename)
-		}
-
-		c.lastHash.Store(filename, fileHash([]byte(content)))
-
-		go func() {
-			time.Sleep(600*time.Millisecond)
-			c.writeMutex.Lock()
-			c.isWritingReceivedFile = false
-			c.writeMutex.Unlock()
+		func() {
+			defer func() {
+				c.writeMutex.Lock()
+				c.isWritingReceivedFile = false
+				c.writeMutex.Unlock()
+			}()
+			if err = os.WriteFile(filename, decodedContent, 0644); err != nil {
+				log.Printf("error writing this file: %s: %v\n", filename, err)
+			} else{
+				log.Printf("received updates to %s\n", filename)
+			}
 		}()
+		c.lastHash.Store(filename, fileHash(decodedContent))
 	}
 }
 
@@ -144,7 +154,7 @@ func (c *Client) monitorFiles() {
 	
 	fmt.Println("Watching for changes under the directory: ", watchPath)
 	
-	select{}
+	// select{}
 
 }
 

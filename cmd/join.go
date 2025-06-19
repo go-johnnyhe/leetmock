@@ -53,7 +53,7 @@ The session URL comes from whoever ran 'leetmock start'.`,
 		defer conn.Close()
 
 		c := client.NewClient(conn)
-		c.Start()
+		c.Start(ctx)
 
 		<-ctx.Done()
 		fmt.Println("")

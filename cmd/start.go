@@ -110,7 +110,7 @@ Perfect for mock interviews, pair programming, and collaborative debugging.`,
 
 			c := client.NewClient(conn)
 			c.SendFile(fileName)
-			c.Start()
+			c.Start(ctx)
 			<-ctx.Done()
 		}(ctx)
 
