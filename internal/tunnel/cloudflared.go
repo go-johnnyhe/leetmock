@@ -148,12 +148,12 @@ func StartCloudflaredTunnel(ctx context.Context) (string, error){
 	}
 
 	// go io.Copy(os.Stderr, stderr)
-	reader, writer := io.Pipe()
-	go func() {
-		defer writer.Close()
-		io.Copy(io.MultiWriter(os.Stderr, writer), stderr)
-	}()
-	scanner := bufio.NewScanner(reader)
+	// reader, writer := io.Pipe()
+	// go func() {
+	// 	defer writer.Close()
+	// 	io.Copy(io.MultiWriter(os.Stderr, writer), stderr)
+	// }()
+	scanner := bufio.NewScanner(stderr)
 	urlRegex := regexp.MustCompile(`https://[a-z0-9-]+\.trycloudflare\.[a-z]+`)
 
 	timeout := time.After(45 * time.Second)

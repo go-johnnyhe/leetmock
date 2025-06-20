@@ -97,11 +97,19 @@ Perfect for mock interviews, pair programming, and collaborative debugging.`,
 			return
 		}
 
-		fmt.Printf("\n🎉 Leetmock Session ready!\n")
-		fmt.Printf("📁 Sharing: %s\n", fileName)
-		fmt.Printf("💡 Your partner should run:\n")
-		fmt.Printf("   leetmock join %s\n\n", tunnelURL)
-		fmt.Println("🔥 Session active - press Ctrl+C to stop")
+		fmt.Printf("\n🎉Ready! You're now sharing: %s\n", fileName)
+		fmt.Println("")
+		fmt.Printf("  Your partner should run:\n")
+		// fmt.Printf("   leetmock join %s\n\n", tunnelURL)
+		if os.Getenv("TERM") != "dumb" && os.Getenv("NO_COLOR") == "" {
+			fmt.Printf("   \033[1mleetmock join %s\033[0m\n\n", tunnelURL)
+		} else {
+			fmt.Printf("   leetmock join %s\n\n", tunnelURL)
+		}
+		
+		fmt.Println("\n  Tip: Please enable auto-save, disable auto-format")
+		fmt.Println("")
+		fmt.Println("🔥 Session active, feel free to use any editor - press Ctrl+C to stop")
 
 		// let the starter user connect as a client too
 		go func(ctx context.Context) {
@@ -121,6 +129,7 @@ Perfect for mock interviews, pair programming, and collaborative debugging.`,
 
 		<-ctx.Done()
 		srv.Shutdown(context.Background())
+		time.Sleep(100 * time.Millisecond)
 		fmt.Println("")
 		fmt.Println("Goodbye!")
 		
