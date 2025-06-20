@@ -97,19 +97,26 @@ Perfect for mock interviews, pair programming, and collaborative debugging.`,
 			return
 		}
 
-		fmt.Printf("\n🎉Ready! You're now sharing: %s\n", fileName)
+		fmt.Printf("\n✅ Syncing %s\n", fileName)
 		fmt.Println("")
-		fmt.Printf("  Your partner should run:\n")
-		// fmt.Printf("   leetmock join %s\n\n", tunnelURL)
+		fmt.Printf("Share this command with your partner:\n")
+
+		// Bold the command for better visibility
 		if os.Getenv("TERM") != "dumb" && os.Getenv("NO_COLOR") == "" {
-			fmt.Printf("   \033[1mleetmock join %s\033[0m\n\n", tunnelURL)
+			fmt.Printf("\n  \033[1mleetmock join %s\033[0m\n", tunnelURL)
 		} else {
-			fmt.Printf("   leetmock join %s\n\n", tunnelURL)
+			fmt.Printf("\n  leetmock join %s\n", tunnelURL)
 		}
-		
-		fmt.Println("\n  Tip: Please enable auto-save, disable auto-format")
+
+		// Add spacing and clearer tips
 		fmt.Println("")
-		fmt.Println("🔥 Session active, feel free to use any editor - press Ctrl+C to stop")
+		fmt.Println("💡 Tips:")
+		fmt.Println("  • Enable auto-save in your editor")
+		fmt.Println("  • Disable auto-formatting to avoid conflicts")
+		fmt.Println("  • Both can edit simultaneously - last save wins")
+		fmt.Println("")
+		fmt.Println("Press Ctrl+C to end session")
+		fmt.Println("")
 
 		// let the starter user connect as a client too
 		go func(ctx context.Context) {
