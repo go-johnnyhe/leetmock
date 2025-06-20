@@ -207,7 +207,7 @@ func (c *Client) handleFileEvent(event fsnotify.Event) {
 		c.timer.Stop()
 	}
 
-	c.timer = time.AfterFunc(500*time.Millisecond, func() {
+	c.timer = time.AfterFunc(50*time.Millisecond, func() {
 		c.SendFile(filePath)
 	})
 	c.timerMutex.Unlock()

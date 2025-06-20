@@ -13,8 +13,9 @@ import (
 var clients = make(map[*wsutil.Peer]bool)
 var clientsMutex = &sync.Mutex{}
 var upgrader = websocket.Upgrader {
-	ReadBufferSize: 1024,
-	WriteBufferSize: 1024,
+	ReadBufferSize: 4096,
+	WriteBufferSize: 4096,
+	EnableCompression: true,
 	CheckOrigin: func(r *http.Request) bool {
 		return true
 	},
@@ -67,7 +68,7 @@ func StartServer(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 		if msgType == websocket.TextMessage {
-			log.Printf("Message: %s", string(msg))
+			log.Printf("Message received: %d bytes for file", len(msg))
 
 			clientsMutex.Lock()
 			for client := range clients {

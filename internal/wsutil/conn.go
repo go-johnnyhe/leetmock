@@ -1,6 +1,7 @@
 package wsutil
 
 import (
+	"net"
 	"sync"
 	"time"
 
@@ -16,6 +17,9 @@ type Peer struct {
 }
 
 func NewPeer(conn *websocket.Conn) *Peer {
+	if tcpConn, ok := conn.UnderlyingConn().(*net.TCPConn); ok {
+		tcpConn.SetNoDelay(true)
+	}
 	return &Peer{
 		Conn: conn,
 	}
