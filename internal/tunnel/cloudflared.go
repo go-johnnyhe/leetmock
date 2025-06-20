@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"runtime"
 	"strings"
@@ -22,15 +23,26 @@ func getCloudflaredBinary() (string, error) {
 		binaryName = "cloudflared.exe"
 	}
 
-	binaryPath := binaryName
-	if runtime.GOOS != "windows" {
-		binaryPath = "./" + binaryName
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return "", fmt.Errorf("failed to get home directory: %v", err)
 	}
 
-	if _, err := os.Stat(binaryName); err == nil {
+	leetmockDir := filepath.Join(homeDir, ".leetmock")
+	if err := os.MkdirAll(leetmockDir, 0755); err != nil {
+		return "", fmt.Errorf("failed to create .leetmock directory: %v", err)
+	}
+
+	binaryPath := filepath.Join(leetmockDir, binaryName)
+	// if runtime.GOOS != "windows" {
+	// 	binaryPath = "./" + binaryName
+	// }
+
+	if _, err := os.Stat(binaryPath); err == nil {
 		return binaryPath, nil
 	}
 	fmt.Println("First time setup: downloading cloudflared (~15MB)...")
+	fmt.Printf("Saving to: %s\n", binaryPath)
 
 	var downloadURL string
 	var needsExtraction bool
@@ -64,12 +76,12 @@ func getCloudflaredBinary() (string, error) {
 	}
 
 	if needsExtraction {
-		if err := extractCloudflaredFromTgz(resp.Body, binaryName); err != nil {
+		if err := extractCloudflaredFromTgz(resp.Body, binaryPath); err != nil {
 			return "", fmt.Errorf("failed to extract the binary %v", err)
 		}
 	} else {
 		// make binary file
-		file, err := os.Create(binaryName)
+		file, err := os.Create(binaryPath)
 		if err != nil {
 			return "", fmt.Errorf("failed to create file: %v", err)
 		}
@@ -84,7 +96,7 @@ func getCloudflaredBinary() (string, error) {
 
 	// on unix systems, make binary into executable
 	if runtime.GOOS != "windows" {
-		if err := os.Chmod(binaryName, 0755); err != nil {
+		if err := os.Chmod(binaryPath, 0755); err != nil {
 			return "", fmt.Errorf("failed to make executable: %v", err)
 		}
 	}
