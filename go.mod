@@ -1,4 +1,4 @@
-module https://github.com/go-johnnyhe/leetmock
+module github.com/go-johnnyhe/leetmock
 
 go 1.24.3
 
