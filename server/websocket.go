@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log"
 	"time"
-	"leetcode/internal/wsutil"
+	"github.com/go-johnnyhe/leetmock/internal/wsutil"
 	"github.com/gorilla/websocket"
 )
 

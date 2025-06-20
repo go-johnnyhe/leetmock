@@ -1,7 +1,7 @@
 package main
 
 import (
-	"leetcode/cmd"
+	"github.com/go-johnnyhe/leetmock/cmd"
 )	
 
 func main() {

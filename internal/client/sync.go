@@ -13,8 +13,7 @@ import (
     "sync"
 	"sync/atomic"
     "time"
-    
-	"leetcode/internal/wsutil"
+    "github.com/go-johnnyhe/leetmock/internal/wsutil"
 
     "github.com/fsnotify/fsnotify"
     "github.com/gorilla/websocket"

@@ -3,15 +3,15 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"leetcode/server"
+	"github.com/go-johnnyhe/leetmock/server"
 	"net/http"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
 	"time"
-	"leetcode/internal/client"
-	"leetcode/internal/tunnel"
+	"github.com/go-johnnyhe/leetmock/internal/client"
+	"github.com/go-johnnyhe/leetmock/internal/tunnel"
 	"github.com/gorilla/websocket"
 	"github.com/spf13/cobra"
 )

@@ -12,7 +12,7 @@ import (
     "syscall"
     "github.com/gorilla/websocket"
     "github.com/spf13/cobra"
-    "leetcode/internal/client"
+	"github.com/go-johnnyhe/leetmock/internal/client"
 )
 
 // joinCmd represents the join command
