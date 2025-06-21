@@ -115,6 +115,13 @@ Perfect for mock interviews, pair programming, and collaborative debugging.`,
 		fmt.Println("  • Disable auto-formatting to avoid conflicts")
 		fmt.Println("  • Both can edit simultaneously - last save wins")
 		fmt.Println("")
+		fmt.Println("🧑‍💻 Vim/Neovim users: For best experience, add the following to your config (e.g. ~/.vimrc or ~/.config/nvim/init.vim):")
+		fmt.Println("")
+		fmt.Println("    set autoread")
+		fmt.Println("    au CursorHold,CursorHoldI * checktime")
+		fmt.Println("    au FocusGained,BufEnter * :checktime")
+		fmt.Println("    set updatetime=600")
+		fmt.Println("")
 		fmt.Println("Press Ctrl+C to end session")
 		fmt.Println("")
 
