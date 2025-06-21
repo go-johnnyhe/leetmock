@@ -145,12 +145,27 @@ func (c *Client) monitorFiles(ctx context.Context) {
 
 	go c.processFileEvents(ctx, watcher)
 	
-	watchPath := "./"
-	if err := watcher.Add(watchPath); err != nil {
-		log.Fatal(err)
+
+	if err := watcher.Add("."); err != nil {
+		// Don't confuse users with partial functionality
+		fmt.Println("\n❌ Cannot watch this directory (filesystem issue)")
+		fmt.Println("\n✅ Quick fix - run these 2 commands:")
+		fmt.Println("   $ mkdir -p /tmp/leetmock && cd /tmp/leetmock")
+		fmt.Println("   $ leetmock join <session-url>")
+		fmt.Println("\nThis will start your session in a clean directory.")
+		os.Exit(1)
+	}
+
+	fmt.Println("File watching active, all changes will sync!")
+	
+	if files, err := os.ReadDir("."); err == nil {
+		for _, f := range files {
+			if !f.IsDir() && !strings.HasPrefix(f.Name(), ".") {
+					watcher.Add(f.Name())
+			}
+		}
 	}
 	
-	fmt.Println("Watching for changes under the directory: ", watchPath)
 	
 	// select{}
 
