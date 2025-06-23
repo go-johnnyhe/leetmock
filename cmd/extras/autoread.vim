@@ -6,5 +6,5 @@ set updatetime=500
 
 augroup mycli_autoread
     autocmd!
-    autocmd FocusGained,BufEnter,CursorHold * checktime
+    autocmd FocusGained,BufEnter,CursorHold,CursorHoldI * checktime
 augroup END
