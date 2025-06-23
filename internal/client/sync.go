@@ -9,6 +9,7 @@ import (
     "log"
     "os"
     "path/filepath"
+	"regexp"
     "strings"
     "sync"
 	"sync/atomic"
@@ -18,6 +19,8 @@ import (
     "github.com/fsnotify/fsnotify"
     "github.com/gorilla/websocket"
 )
+
+var vimTemp = regexp.MustCompile(`(?i)\.(sw[opx0-9a-z]|un~|bak|tmp|~)$`)
 
 type Client struct {
 	conn *wsutil.Peer
@@ -105,6 +108,11 @@ func (c *Client) readLoop() {
 
 		// check if file path is clean
 		filename := filepath.Base(parts[0])
+
+		if vimTemp.MatchString(filename) {
+			continue
+		}
+
 		cleanPath := filepath.Clean(filename)
 		if cleanPath != filename || strings.Contains(filename, "..") || strings.HasPrefix(filename, "/") {
 			log.Printf("invalid name: %s\n", filename)
@@ -207,23 +215,28 @@ func (c *Client) handleFileEvent(event fsnotify.Event) {
 	filePath := event.Name
 	base := filepath.Base(filePath)
 
-
-	// skip vim swap/undo files
-	if strings.HasSuffix(base, ".swp") {
-		return
-	}
-
 	if strings.HasSuffix(base, ".tmp") {
-		trimmed := strings.TrimSuffix(filePath, ".tmp")
-		if _, err := os.Stat(trimmed); err == nil {
-			filePath = trimmed
+		orig := strings.TrimSuffix(filePath, ".tmp")
+		if _, err := os.Stat(orig); err == nil {
+			filePath = orig
+			base = filepath.Base(orig)
 		} else {
 			return
 		}
 	}
 
 	if strings.HasSuffix(base, "~") {
-		filePath = strings.TrimSuffix(filePath, "~")
+		orig := strings.TrimSuffix(filePath, "~")
+		if _, err := os.Stat(orig); err == nil {
+			filePath = orig
+			base = filepath.Base(orig)
+		} else {
+			return
+		}
+	}
+
+	if vimTemp.MatchString(base) {
+		return
 	}
 
 	c.timerMutex.Lock()
