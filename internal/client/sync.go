@@ -20,7 +20,7 @@ import (
     "github.com/gorilla/websocket"
 )
 
-var vimTemp = regexp.MustCompile(`(?i)\.(sw[opx0-9a-z]|un~|bak|tmp|~)$`)
+var vimTemp = regexp.MustCompile(`(?i)\.(sw[opx0-9a-z]+|un~|bak|tmp|~)$`)
 
 type Client struct {
 	conn *wsutil.Peer
