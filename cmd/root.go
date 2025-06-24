@@ -5,8 +5,8 @@ Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"fmt"
 	"os"
-
 	"github.com/spf13/cobra"
 )
 
@@ -34,11 +34,16 @@ How it works:
 No accounts, no servers to manage, no complex setup - just pure collaborative coding.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) { },
+	Run: func(cmd *cobra.Command, args []string) {
+		showVersion, _ := cmd.Flags().GetBool("version") 
+		if showVersion {
+			fmt.Println("leetmock version:", Version)
+			os.Exit(0)
+		}
+		cmd.Help()
+	},
 }
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	err := rootCmd.Execute()
 	if err != nil {
@@ -47,15 +52,9 @@ func Execute() {
 }
 
 func init() {
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-
-	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.leetcode.yaml)")
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	rootCmd.PersistentFlags().Bool("version", false, "Print the version and exit")
+
 }
 
 
