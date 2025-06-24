@@ -108,23 +108,6 @@ Perfect for mock interviews, pair programming, and collaborative debugging.`,
 			fmt.Printf("\n  leetmock join %s\n", tunnelURL)
 		}
 
-		// Add spacing and clearer tips
-		fmt.Println("")
-		fmt.Println("💡 Tips:")
-		fmt.Println("  • Enable auto-save in your editor")
-		fmt.Println("  • Disable auto-formatting to avoid conflicts")
-		fmt.Println("  • Both can edit simultaneously - last save wins")
-		fmt.Println("")
-		fmt.Println("🧑‍💻 Vim/Neovim users: For best experience, add the following to your config (e.g. ~/.vimrc or ~/.config/nvim/init.vim):")
-		fmt.Println("")
-		fmt.Println("    set autoread")
-		fmt.Println("    au CursorHold,CursorHoldI * checktime")
-		fmt.Println("    au FocusGained,BufEnter * :checktime")
-		fmt.Println("    set updatetime=600")
-		fmt.Println("")
-		fmt.Println("Press Ctrl+C to end session")
-		fmt.Println("")
-
 		// let the starter user connect as a client too
 		go func(ctx context.Context) {
 			time.Sleep(500 * time.Millisecond)

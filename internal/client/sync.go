@@ -165,15 +165,6 @@ func (c *Client) monitorFiles(ctx context.Context) {
 	}
 
 	fmt.Println("File watching active, all changes will sync!")
-
-	fmt.Println("")
-	fmt.Println("🧠 Vim/Neovim users: For best experience, add the following to your config (e.g. ~/.vimrc or ~/.config/nvim/init.vim):")
-	fmt.Println("")
-	fmt.Println("    set autoread")
-	fmt.Println("    au CursorHold,CursorHoldI * checktime")
-	fmt.Println("    au FocusGained,BufEnter * :checktime")
-	fmt.Println("    set updatetime=600")
-	fmt.Println("")
 	fmt.Println("Happy coding!")
 
 	if files, err := os.ReadDir("."); err == nil {

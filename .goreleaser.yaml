@@ -1,0 +1,45 @@
+project_name: leetmock
+release:
+  github:
+    owner: go-johnnyhe
+    name: leetmock
+
+builds:
+  - id: leetmock
+    main: .
+    binary: leetmock
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w -X main.version={{.Version}}
+
+archives:
+  - format: tar.gz
+    files:
+      - LICENSE
+      - README.md
+
+checksum:
+  name_template: 'checksums.txt'
+
+changelog:
+  use: git
+
+brews:
+  - name: leetmock
+    tap:
+      owner: go-johnnyhe
+      name: homebrew-tap
+    commit_author:
+      name: GoReleaser Bot
+      email: bot@goreleaser.com
+    folder: Formula
+    homepage: "https://github.com/go-johnnyhe/leetmock"
+    description: "A CLI tool for mocking LeetCode data"
+    install: |
+      bin.install "leetmock"
