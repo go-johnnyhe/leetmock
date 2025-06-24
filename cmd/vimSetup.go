@@ -20,7 +20,9 @@ var pluginBody []byte
 const luaSnippet = `-- ~/.config/nvim/after/plugin/leetmock.lua
 vim.opt.autoread = true
 vim.opt.updatetime = 500
+vim.opt.swapfile = false
 local group = vim.api.nvim_create_augroup("leetmock_autoread", { clear = true })
+
 
 vim.api.nvim_create_autocmd(
   { "FocusGained", "BufEnter", "CursorHold", "CursorHoldI", "TermEnter" },
@@ -52,6 +54,7 @@ to quickly create a Cobra application.`,
 			dst := filepath.Join(data,
 			"site", "pack", "leetmock", "start",
 			"autoread", "plugin", "autoread.vim")
+			fmt.Println("DEBUG copying to →", dst)
 			if err := copyFile(dst, pluginBody); err == nil {
 				fmt.Println("✅ Neovim config is done (data path)")
 				ok = true
@@ -62,6 +65,7 @@ to quickly create a Cobra application.`,
 
 		// nvim config/plugin fallback
 		if cfg, err := nvimConfigDir(); err == nil {
+			fmt.Println("DEBUG copying to →", cfg)
 			if err := installNvimScriptAfterPlugin(cfg); err == nil {
 				fmt.Println("✅ Neovim config is done (after/plugin path), restart your nvim")
 				ok = true
@@ -73,6 +77,7 @@ to quickly create a Cobra application.`,
 		configDst := filepath.Join(vimSiteDir(), 
 		"pack", "leetmock", "start",
 		"autoread", "plugin", "autoread.vim")
+		fmt.Println("DEBUG copying to →", configDst)
 		if err := copyFile(configDst, pluginBody); err == nil {
 			fmt.Println("✅ Vim config is done, restart your vim")
 			ok = true
@@ -90,26 +95,35 @@ to quickly create a Cobra application.`,
 	},
 }
 
-func nvimDataDir() (string, error) {
-	cmd := exec.Command("nvim", "--headless", "--clean", "+lua print(vim.fn.stdpath('data'))", "+q")
-	out, err := cmd.Output()
+func nvimStdPath(which string) (string, error) {
+	cmd := exec.Command(
+		"nvim",
+		"--headless",
+		"-u", "NONE",
+		"-c", fmt.Sprintf(`lua print(vim.fn.stdpath("%s"))`, which),
+		"-c", "q",
+	)
+	out, err := cmd.CombinedOutput()
 	if err != nil {
 		return "", err
 	}
-	return strings.TrimSpace(string(out)), nil
+	fmt.Printf("RAW %s output: %q\n", which, out)
+	s := strings.TrimSpace(string(out))
+	s = strings.TrimSuffix(s, "%")
+	return s, nil
+}
+
+func nvimDataDir() (string, error) {
+	return nvimStdPath("data")
 }
 
 func nvimConfigDir() (string, error) {
-	cmd := exec.Command("nvim", "--headless", "--clean", "+lua print(vim.fn.stdpath('config'))", "+q")
-	out, err := cmd.Output()
-	if err != nil {
-		return "", err
-	}
-	return strings.TrimSpace(string(out)), nil
+	return nvimStdPath("config")
 }
 
 func installNvimScriptAfterPlugin(cfg string) error {
 	dst := filepath.Join(cfg, "after", "plugin", "leetmock.lua")
+	fmt.Println("DEBUG copying to →", dst)
 	if err := os.MkdirAll(filepath.Dir(dst), 0o755); err != nil {
 		return err
 	}
