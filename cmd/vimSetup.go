@@ -19,21 +19,56 @@ var pluginBody []byte
 
 const luaSnippet = `-- ~/.config/nvim/after/plugin/leetmock.lua
 vim.opt.autoread = true
-vim.opt.updatetime = 500
+vim.opt.updatetime = 100
 vim.opt.swapfile = false
 local group = vim.api.nvim_create_augroup("leetmock_autoread", { clear = true })
 
+-- Timer for file watching
+local file_watch_timer = nil
+
+-- Function to check for file changes
+local function check_file_changes()
+  -- pcall avoids 'checktime' errors in special buffers
+  pcall(vim.cmd, "checktime")
+end
+
+-- Set up continuous file monitoring with timer
+local function setup_file_watcher()
+  if file_watch_timer then
+    vim.fn.timer_stop(file_watch_timer)
+  end
+  
+  file_watch_timer = vim.fn.timer_start(200, function()
+    check_file_changes()
+  end, { ['repeat'] = -1 })
+end
+
+-- Start the file watcher
+setup_file_watcher()
 
 vim.api.nvim_create_autocmd(
   { "FocusGained", "BufEnter", "CursorHold", "CursorHoldI", "TermEnter" },
   {
     group = group,
     pattern = "*",
-    callback = function()
-      -- pcall avoids 'checktime' errors in special buffers
-      pcall(vim.cmd, "checktime")
-    end,
+    callback = check_file_changes,
     desc = "Reload buffer if the file changed on disk",
+  }
+)
+
+-- Additional autocmd for when vim loses focus but file changes occur
+vim.api.nvim_create_autocmd(
+  { "FocusLost" },
+  {
+    group = group,
+    pattern = "*",
+    callback = function()
+      -- Ensure timer continues running even when focus is lost
+      if not file_watch_timer then
+        setup_file_watcher()
+      end
+    end,
+    desc = "Maintain file watching when focus is lost",
   }
 )`
 
