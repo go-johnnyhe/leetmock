@@ -20,7 +20,7 @@ import (
     "github.com/gorilla/websocket"
 )
 
-var vimTemp = regexp.MustCompile(`(?i)\.(sw[opx0-9a-z]+|un~|bak|tmp|~)$`)
+var ignore = regexp.MustCompile(`(?i)(?:^|[\\/])(?:\.git|\.hg|\.svn|\.vscode|\.idea)(?:[\\/]|$)|(?:^|[\\/])\.s\.pgsql\.\d+$|\.ds_store$|\.sw[a-p0-9]$|\.swp$|\.swo$|~$|\.bak$|\.tmp$`)
 
 type Client struct {
 	conn *wsutil.Peer
@@ -49,11 +49,11 @@ func fileHash(b []byte) string {
 func (c *Client) SendFile(filePath string) {
 	
 	if c.isWritingReceivedFile.Load() {
-		log.Println("skipping send - currently writing a received file")
+		// log.Println("skipping send - currently writing a received file")
 		return
 	}
 	fileInfo, err := os.Stat(filePath)
-	if err != nil {
+	if err != nil || !fileInfo.Mode().IsRegular() {
 		return
 	}
 	if fileInfo.Size() > 10 * 1024 * 1024 {
@@ -109,7 +109,7 @@ func (c *Client) readLoop() {
 		// check if file path is clean
 		filename := filepath.Base(parts[0])
 
-		if vimTemp.MatchString(filename) {
+		if ignore.MatchString(filename) {
 			continue
 		}
 
@@ -152,7 +152,6 @@ func (c *Client) monitorFiles(ctx context.Context) {
 	}()
 
 	go c.processFileEvents(ctx, watcher)
-	
 
 	if err := watcher.Add("."); err != nil {
 		// Don't confuse users with partial functionality
@@ -169,8 +168,17 @@ func (c *Client) monitorFiles(ctx context.Context) {
 
 	if files, err := os.ReadDir("."); err == nil {
 		for _, f := range files {
-			if !f.IsDir() && !strings.HasPrefix(f.Name(), ".") {
-					watcher.Add(f.Name())
+			// if !f.IsDir() && !strings.HasPrefix(f.Name(), ".") {
+			// 		watcher.Add(f.Name())
+			// }
+			name := f.Name()
+			if f.IsDir() || ignore.MatchString(name) {
+				continue
+			}
+
+			info, err := f.Info()
+			if err == nil && info.Mode().IsRegular() {
+				watcher.Add(name)
 			}
 		}
 	}
@@ -226,7 +234,7 @@ func (c *Client) handleFileEvent(event fsnotify.Event) {
 		}
 	}
 
-	if vimTemp.MatchString(base) {
+	if ignore.MatchString(base) {
 		return
 	}
 
