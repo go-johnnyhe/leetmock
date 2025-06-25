@@ -38,3 +38,9 @@ WebSocket Echo Test
 - B sends "hello", A prints it, replies "world", B prints it
 Success = working bi-directional connection
 
+
+
+## 🛠️ Install via curl
+
+```sh
+curl -sSf https://raw.githubusercontent.com/go-johnnyhe/leetmock/main/install.sh | sh
