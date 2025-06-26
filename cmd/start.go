@@ -64,7 +64,7 @@ Perfect for mock interviews, pair programming, and collaborative debugging.`,
 			return
 		}
 
-		fmt.Printf("Starting the mock session with %s\n", fileName)
+		// fmt.Printf("Starting the mock session with %s\n", fileName)
 
 		// Create a context to link with a command line process so that when you stop, we know where to exit
 		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -89,7 +89,7 @@ Perfect for mock interviews, pair programming, and collaborative debugging.`,
 		// give server a moment to start
 		time.Sleep(1 * time.Second)
 
-		fmt.Println("Creating secure tunnel...")
+		// fmt.Println("Connecting...")
 		tunnelURL, err := tunnel.StartCloudflaredTunnel(ctx)
 		if err != nil {
 			fmt.Printf("Failed to create tunnel: %v\n", err)
@@ -97,7 +97,7 @@ Perfect for mock interviews, pair programming, and collaborative debugging.`,
 			return
 		}
 
-		fmt.Printf("\n✅ Syncing %s\n", fileName)
+		fmt.Printf("\n✅ Wavelanding %s\n", fileName)
 		fmt.Println("")
 		fmt.Printf("Share this command with your partner:\n")
 

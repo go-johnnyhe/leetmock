@@ -83,7 +83,7 @@ func (c *Client) SendFile(filePath string) {
 		return
 	}
 
-	fmt.Printf("Sent %s at: %s\n", filePath, time.Now().Format("15:04:05"))
+	fmt.Printf("-> %s\n", filepath.Base(filePath))
 }
 
 func (c *Client) readLoop() {
@@ -132,7 +132,7 @@ func (c *Client) readLoop() {
 				if err = os.WriteFile(filename, decodedContent, 0644); err != nil {
 					log.Printf("error writing this file: %s: %v\n", filename, err)
 				} else{
-					log.Printf("received updates to %s\n", filename)
+					fmt.Printf("<- %s\n", filename)
 				}
 		}()
 		c.lastHash.Store(filename, fileHash(decodedContent))
@@ -163,8 +163,8 @@ func (c *Client) monitorFiles(ctx context.Context) {
 		os.Exit(1)
 	}
 
-	fmt.Println("File watching active, all changes will sync!")
-	fmt.Println("Happy coding!")
+	fmt.Println("Active (Ctrl+C to stop)")
+	// fmt.Println("Happy coding!")
 
 	if files, err := os.ReadDir("."); err == nil {
 		for _, f := range files {
