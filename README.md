@@ -1,46 +1,48 @@
-# leetcode-session
-Pair-program in terminal using Websockets
+# Waveland
 
-Structure
-- server setup on docker (certain layer of complexity)
-- clients connect to server 
-- file notification system (fsnotify)
-- diffing algorithm
+Share code instantly. Perfect for interviews, pair programming, debugging.
 
-Server
-- websocket (gorilla)
-- handle connections
-- send diff message
+## Quick Start
 
-Client
-- connect to server
-- create file watcher
-- send file content
-- handle file content
-- read diff message
-
-
-Thoughts
-- latency
-- resolving conflicts
-    - notify the user??
-    - choose automatically last write?
-- logging for rollback? NoSQL db?
-- show diff content, +/- operations like Git?
-
-- Person A "file watch changes <--> ws client <--> ws server" Person B "<--> ws client <--> file watch changes"
-
-Objective:
-WebSocket Echo Test
-
-- Person A runs leetcode-mock start (WebSocket server)
-- Person B runs leetcode-mock join <ip> (client)
-- B sends "hello", A prints it, replies "world", B prints it
-Success = working bi-directional connection
-
-
-
-## 🛠️ Install via curl
-
-```sh
+**Install:**
+```bash
 curl -sSf https://raw.githubusercontent.com/go-johnnyhe/waveland/main/install.sh | sh
+```
+
+**Share a file:**
+```bash
+waveland start main.py
+```
+
+**Join a session:**
+```bash
+waveland join <session-url>
+```
+
+## How it works
+
+1. Run `waveland start filename.py` 
+2. Share the generated URL with your partner
+3. They run `waveland join <your-url>`
+4. Both see live file updates with `→` and `←` indicators
+
+No setup, no accounts, no configuration. Just works.
+
+## Features
+
+- **Zero setup** - automatic secure tunneling 
+- **Live sync** - see changes instantly
+- **Vim/Neovim** - auto-reload on file changes
+- **Cross-platform** - works everywhere
+- **Private** - secure peer-to-peer sessions
+
+## Use Cases
+
+- **Mock interviews** - share code with interviewer
+- **Pair programming** - collaborate in real-time  
+- **Debug sessions** - troubleshoot together
+- **Code reviews** - walk through changes live
+
+---
+
+Built with Go + WebSockets. Open source.
