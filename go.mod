@@ -1,4 +1,4 @@
-module github.com/go-johnnyhe/leetmock
+module github.com/go-johnnyhe/waveland
 
 go 1.24.3
 

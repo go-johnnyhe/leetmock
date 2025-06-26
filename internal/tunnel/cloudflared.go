@@ -28,12 +28,12 @@ func getCloudflaredBinary() (string, error) {
 		return "", fmt.Errorf("failed to get home directory: %v", err)
 	}
 
-	leetmockDir := filepath.Join(homeDir, ".leetmock")
-	if err := os.MkdirAll(leetmockDir, 0755); err != nil {
-		return "", fmt.Errorf("failed to create .leetmock directory: %v", err)
+	wavelandDir := filepath.Join(homeDir, ".waveland")
+	if err := os.MkdirAll(wavelandDir, 0755); err != nil {
+		return "", fmt.Errorf("failed to create .waveland directory: %v", err)
 	}
 
-	binaryPath := filepath.Join(leetmockDir, binaryName)
+	binaryPath := filepath.Join(wavelandDir, binaryName)
 	// if runtime.GOOS != "windows" {
 	// 	binaryPath = "./" + binaryName
 	// }

@@ -43,4 +43,4 @@ Success = working bi-directional connection
 ## 🛠️ Install via curl
 
 ```sh
-curl -sSf https://raw.githubusercontent.com/go-johnnyhe/leetmock/main/install.sh | sh
+curl -sSf https://raw.githubusercontent.com/go-johnnyhe/waveland/main/install.sh | sh

@@ -12,7 +12,7 @@ import (
     "syscall"
     "github.com/gorilla/websocket"
     "github.com/spf13/cobra"
-	"github.com/go-johnnyhe/leetmock/internal/client"
+	"github.com/go-johnnyhe/waveland/internal/client"
 )
 
 // joinCmd represents the join command
@@ -27,9 +27,9 @@ This will:
 - Enable real-time file synchronization
 
 Example:
-  leetmock join https://abc123.trycloudflare.com
+  waveland join https://abc123.trycloudflare.com
 
-The session URL comes from whoever ran 'leetmock start'.`,
+The session URL comes from whoever ran 'waveland start'.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("join called")
 		if len(args) != 1 {

@@ -3,15 +3,15 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"github.com/go-johnnyhe/leetmock/server"
+	"github.com/go-johnnyhe/waveland/server"
 	"net/http"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
 	"time"
-	"github.com/go-johnnyhe/leetmock/internal/client"
-	"github.com/go-johnnyhe/leetmock/internal/tunnel"
+	"github.com/go-johnnyhe/waveland/internal/client"
+	"github.com/go-johnnyhe/waveland/internal/tunnel"
 	"github.com/gorilla/websocket"
 	"github.com/spf13/cobra"
 )
@@ -31,15 +31,15 @@ This command will:
 
 Example:
   (current MVP feature)
-  leetmock start main.py              # Share a single file
+  waveland start main.py              # Share a single file
 
   (future)
-  leetmock start main.py test.py      # Share multiple files  
-  leetmock start *.js                 # Share all JavaScript files
-  leetmock start .                    # Share current directory
+  waveland start main.py test.py      # Share multiple files  
+  waveland start *.js                 # Share all JavaScript files
+  waveland start .                    # Share current directory
 
 The generated URL can be shared with anyone - they can join using:
-  leetmock join <your-session-url>
+  waveland join <your-session-url>
 
 Perfect for mock interviews, pair programming, and collaborative debugging.`,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -73,7 +73,7 @@ Perfect for mock interviews, pair programming, and collaborative debugging.`,
 		http.HandleFunc("/ws", server.StartServer)
 		srv := &http.Server{Addr: ":8080"}
 		go func() {
-			fmt.Println("Websocket server started on :8080")
+			// fmt.Println("Websocket server started on :8080")
 			if err := srv.ListenAndServe(); err != http.ErrServerClosed {
 				if strings.Contains(err.Error(), "address already in use") {
 					fmt.Println("Port 8080 is already in use, please close other applications using this port.")
@@ -103,9 +103,9 @@ Perfect for mock interviews, pair programming, and collaborative debugging.`,
 
 		// Bold the command for better visibility
 		if os.Getenv("TERM") != "dumb" && os.Getenv("NO_COLOR") == "" {
-			fmt.Printf("\n  \033[1mleetmock join %s\033[0m\n", tunnelURL)
+			fmt.Printf("\n  \033[1mwaveland join %s\033[0m\n", tunnelURL)
 		} else {
-			fmt.Printf("\n  leetmock join %s\n", tunnelURL)
+			fmt.Printf("\n  waveland join %s\n", tunnelURL)
 		}
 
 		// let the starter user connect as a client too

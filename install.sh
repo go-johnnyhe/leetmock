@@ -2,8 +2,8 @@
 
 set -e
 
-REPO="go-johnnyhe/leetmock"
-BIN="leetmock"
+REPO="go-johnnyhe/waveland"
+BIN="waveland"
 
 # Detect platform
 OS=$(uname | tr '[:upper:]' '[:lower:]')

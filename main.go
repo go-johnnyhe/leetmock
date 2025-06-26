@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/go-johnnyhe/leetmock/cmd"
+	"github.com/go-johnnyhe/waveland/cmd"
 )	
 
 var version = "dev"

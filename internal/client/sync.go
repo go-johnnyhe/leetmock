@@ -14,7 +14,7 @@ import (
     "sync"
 	"sync/atomic"
     "time"
-    "github.com/go-johnnyhe/leetmock/internal/wsutil"
+    "github.com/go-johnnyhe/waveland/internal/wsutil"
 
     "github.com/fsnotify/fsnotify"
     "github.com/gorilla/websocket"
@@ -157,8 +157,8 @@ func (c *Client) monitorFiles(ctx context.Context) {
 		// Don't confuse users with partial functionality
 		fmt.Println("\n❌ Cannot watch this directory (filesystem issue)")
 		fmt.Println("\n✅ Quick fix - run these 2 commands:")
-		fmt.Println("   $ mkdir -p /tmp/leetmock && cd /tmp/leetmock")
-		fmt.Println("   $ leetmock join <session-url>")
+		fmt.Println("   $ mkdir -p /tmp/waveland && cd /tmp/waveland")
+		fmt.Println("   $ waveland join <session-url>")
 		fmt.Println("\nThis will start your session in a clean directory.")
 		os.Exit(1)
 	}

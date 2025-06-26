@@ -1,13 +1,13 @@
-project_name: leetmock
+project_name: waveland
 release:
   github:
     owner: go-johnnyhe
-    name: leetmock
+    name: waveland
 
 builds:
-  - id: leetmock
+  - id: waveland
     main: .
-    binary: leetmock
+    binary: waveland
     goos:
       - linux
       - darwin
@@ -31,7 +31,7 @@ changelog:
   use: git
 
 brews:
-  - name: leetmock
+  - name: waveland
     tap:
       owner: go-johnnyhe
       name: homebrew-tap
@@ -39,7 +39,7 @@ brews:
       name: GoReleaser Bot
       email: bot@goreleaser.com
     folder: Formula
-    homepage: "https://github.com/go-johnnyhe/leetmock"
+    homepage: "https://github.com/go-johnnyhe/waveland"
     description: "A CLI tool for mocking LeetCode data"
     install: |
-      bin.install "leetmock"
+      bin.install "waveland"

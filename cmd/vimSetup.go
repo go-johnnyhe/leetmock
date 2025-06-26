@@ -17,11 +17,11 @@ import (
 //go:embed extras/autoread.vim
 var pluginBody []byte
 
-const luaSnippet = `-- ~/.config/nvim/after/plugin/leetmock.lua
+const luaSnippet = `-- ~/.config/nvim/after/plugin/waveland.lua
 vim.opt.autoread = true
 vim.opt.updatetime = 100
 vim.opt.swapfile = false
-local group = vim.api.nvim_create_augroup("leetmock_autoread", { clear = true })
+local group = vim.api.nvim_create_augroup("waveland_autoread", { clear = true })
 
 -- Timer for file watching
 local file_watch_timer = nil
@@ -87,7 +87,7 @@ to quickly create a Cobra application.`,
 
 		if data, err := nvimDataDir(); err == nil {
 			dst := filepath.Join(data,
-			"site", "pack", "leetmock", "start",
+			"site", "pack", "waveland", "start",
 			"autoread", "plugin", "autoread.vim")
 			fmt.Println("DEBUG copying to →", dst)
 			if err := copyFile(dst, pluginBody); err == nil {
@@ -110,7 +110,7 @@ to quickly create a Cobra application.`,
 		}
 
 		configDst := filepath.Join(vimSiteDir(), 
-		"pack", "leetmock", "start",
+		"pack", "waveland", "start",
 		"autoread", "plugin", "autoread.vim")
 		fmt.Println("DEBUG copying to →", configDst)
 		if err := copyFile(configDst, pluginBody); err == nil {
@@ -157,7 +157,7 @@ func nvimConfigDir() (string, error) {
 }
 
 func installNvimScriptAfterPlugin(cfg string) error {
-	dst := filepath.Join(cfg, "after", "plugin", "leetmock.lua")
+	dst := filepath.Join(cfg, "after", "plugin", "waveland.lua")
 	fmt.Println("DEBUG copying to →", dst)
 	if err := os.MkdirAll(filepath.Dir(dst), 0o755); err != nil {
 		return err
