@@ -23,7 +23,6 @@ var joinCmd = &cobra.Command{
 
 This will:
 - Connect to the session via WebSocket
-- Sync shared files to ./shared/ directory
 - Enable real-time file synchronization
 
 Example:

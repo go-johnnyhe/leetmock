@@ -1,6 +1,10 @@
 # Waveland
 
-Share code instantly. Perfect for interviews, pair programming, debugging.
+I’ve been annoyed with how much effort it takes to collaborate on coding real-time. Screensharing takes too much back and forth, and git workflows are slow.
+
+Tools like VS Code Live Share or CoderPad nail real-time collab, but only if you live inside their IDE. If you prefer Vim, Neovim, JetBrains, or even Nano, you’re back to the same issues again.
+
+So I built waveland, a tool that makes your collab sessions feel like editing on Google Docs.
 
 ## Quick Start
 
@@ -9,9 +13,9 @@ Share code instantly. Perfect for interviews, pair programming, debugging.
 curl -sSf https://raw.githubusercontent.com/go-johnnyhe/waveland/main/install.sh | sh
 ```
 
-**Share a file:**
+**Start a session:**
 ```bash
-waveland start main.py
+waveland start .
 ```
 
 **Join a session:**
@@ -45,4 +49,4 @@ No setup, no accounts, no configuration. Just works.
 
 ---
 
-Built with Go + WebSockets. Open source.
+Built with Go + WebSockets + Cloudflared. Open source.

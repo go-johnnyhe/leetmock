@@ -16,17 +16,11 @@ var Version = "dev"
 var rootCmd = &cobra.Command{
 	Use:   "waveland",
 	Short: "Instantly share your code editor with anyone, anywhere - no setup, just waveland start",
-	Long: `waveland is a real-time collaborative coding tool designed for technical interviews and pair programming.
+	Long: `waveland is a real-time collaborative coding tool designed for mock interviews and pair programming.
 Share your code instantly with friends, colleagues, or interview partners without any setup or configuration.
 
-Perfect for:
-- Mock technical interviews with friends
-- Remote pair programming sessions  
-- Code reviews and debugging together
-- Teaching and mentoring
-
 How it works:
-1. Start a session: waveland start main.py
+1. Go to your working directory and start a session: waveland start .
 2. Share the generated URL with your partner
 3. They join with: waveland join <url>
 4. Code together in real-time using your favorite editors

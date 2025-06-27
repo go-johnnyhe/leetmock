@@ -26,16 +26,11 @@ var startCmd = &cobra.Command{
 This command will:
 - Launch a WebSocket server for real-time collaboration
 - Create a secure tunnel using Cloudflared (no setup required)
-- Share specified files with anyone who joins the session
+- Share the current directory or specified files with anyone who joins the session
 - Generate a shareable URL for your coding partner
 
 Example:
-  (current MVP feature)
   waveland start main.py              # Share a single file
-
-  (future)
-  waveland start main.py test.py      # Share multiple files  
-  waveland start *.js                 # Share all JavaScript files
   waveland start .                    # Share current directory
 
 The generated URL can be shared with anyone - they can join using:
