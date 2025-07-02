@@ -2,7 +2,7 @@
 
 Real-time code collaboration that works with any editor. Like Google Docs, but for coding.
 
-<video src="media/demo.mp4"
+<video src="demo.mp4"
        width="720"
        muted
        autoplay
